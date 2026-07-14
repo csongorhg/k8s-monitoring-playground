@@ -1,20 +1,20 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: Statefulset
 metadata:
   labels:
-    app: prometheus-deployment
-  name: prometheus-deployment-storage
+    app: prometheus-statefulset
+  name: prometheus-statefulset
   namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prometheus-deployment
+      app: prometheus-statefulset
   strategy: {}
   template:
     metadata:
       labels:
-        app: prometheus-deployment
+        app: prometheus-statefulset
     spec:
       containers:
         - image: prom/prometheus:v3.13.1
