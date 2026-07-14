@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: prometheus-deployment.yaml
+  name: prometheus-deployment-storage
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-deployment.yaml
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: prometheus-deployment.yaml
+    spec:
+      containers:
+        - image: prom/prometheus:v3.13.1
+          name: prometheus
+          ports:
+            - containerPort: 9090
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+    volumeClaimTemplates:
+      - metadata:
+          name: prometheus-storage
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName:
+          resources:
+            requests:
+              storage: 1Gi
