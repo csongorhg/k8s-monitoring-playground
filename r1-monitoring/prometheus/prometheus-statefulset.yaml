@@ -10,7 +10,6 @@ spec:
   selector:
     matchLabels:
       app: prometheus-statefulset
-  strategy: {}
   template:
     metadata:
       labels:
@@ -28,12 +27,15 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
-    volumeClaimTemplates:
-      - metadata:
-          name: prometheus-storage
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          storageClassName:
-          resources:
-            requests:
-              storage: 1Gi
+          volumeMounts:
+            - name: prometheus-storage
+              mountPath: /prometheus
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheus-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi

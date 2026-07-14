@@ -57,7 +57,20 @@ standard (default)   rancher.io/local-path   Delete          WaitForFirstConsume
 
 Seems to be set as default storage class [5]. This storage class is present in all namespaces.
 
+## Prometheus statefulset with storage
+```sh
+k get sts
+NAME                     READY   AGE
+prometheus-statefulset   1/1     27s
 
+k get pvc
+NAME                                          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+prometheus-storage-prometheus-statefulset-0   Bound    pvc-1b5d8a97-1daa-47e3-b544-c4b698cbc714   1Gi        RWO            standard       <unset>                 21s
+
+k get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                                    STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pvc-1b5d8a97-1daa-47e3-b544-c4b698cbc714   1Gi        RWO            Delete           Bound    monitoring/prometheus-storage-prometheus-statefulset-0   standard       <unset>                          29s
+```
 
 
 [1] https://github.com/prometheus/prometheus/tree/release-3.13/tsdb
