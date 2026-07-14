@@ -9,6 +9,9 @@ k apply -f monitoring-namespace.yaml
 Check cluster:
 
 ```sh
+kind --version
+kind version 0.32.0
+
 k get nodes
 NAME                 STATUS   ROLES           AGE     VERSION
 kind-control-plane   Ready    control-plane   5m10s   v1.36.1
