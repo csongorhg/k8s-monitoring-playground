@@ -24,3 +24,9 @@ kube-system          Active   8m38s
 local-path-storage   Active   8m34s
 monitoring           Active   5m25s
 ```
+
+Patch netskope on kind nodes:
+
+```sh
+./patch-netskope.sh /path/to/netskope-cert.crt kind-control-plane kind-worker kind-worker2
+```
