@@ -72,6 +72,7 @@ NAME                                       CAPACITY   ACCESS MODES   RECLAIM POL
 pvc-1b5d8a97-1daa-47e3-b544-c4b698cbc714   1Gi        RWO            Delete           Bound    monitoring/prometheus-storage-prometheus-statefulset-0   standard       <unset>                          29s
 ```
 
+Prometheus statefulset w/o setting storageclass in volumeClaimTemplates seems to provision the volume.
 
 
 [1] https://github.com/prometheus/prometheus/tree/release-3.13/tsdb
