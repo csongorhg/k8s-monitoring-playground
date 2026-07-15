@@ -73,8 +73,13 @@ pvc-1b5d8a97-1daa-47e3-b544-c4b698cbc714   1Gi        RWO            Delete     
 ```
 
 
+
 [1] https://github.com/prometheus/prometheus/tree/release-3.13/tsdb
+
 [2] https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects
+
 [3] https://hub.docker.com/layers/prom/prometheus/v3.13.1/images/sha256-bd2dcadfb0d1096e2a4c21817ac7af918e2f19ff628e4bf25fd67a924c13dd80
+
 [4] https://github.com/prometheus/prometheus/blob/73ff57ce2b8161059ac7fe5188f03f1c3d22b29a/cmd/prometheus/main.go#L485
+
 [5] https://github.com/kubernetes-sigs/kind/blob/cda67ef8588f6bfdac5358233f2471cb2149ecaf/pkg/cluster/internal/create/actions/installstorage/storage.go#L77
