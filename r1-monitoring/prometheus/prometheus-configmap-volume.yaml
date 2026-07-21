@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: prometheus
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - image: prom/prometheus:v3.13.1
+          name: prometheus
+          volumeMounts:
+            - name: config
+              mountPath: "/prometheus/config"
+              readOnly: true
+            - name: prometheus-storage
+              mountPath: "/prometheus"
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+            items:
+              - key: "prometheus.yml"
+                path: "config-files/prometheus.yml"
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheus-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi

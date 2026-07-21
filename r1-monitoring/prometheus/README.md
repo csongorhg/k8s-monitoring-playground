@@ -74,6 +74,27 @@ pvc-1b5d8a97-1daa-47e3-b544-c4b698cbc714   1Gi        RWO            Delete     
 
 Prometheus statefulset w/o setting storageclass in volumeClaimTemplates seems to provision the volume.
 
+## Prometheus ConfigMap
+
+`config-files/prometheus.yml` is taken from [6]. First create ConfigMap, then mount the read-only file.
+
+Checking mounted file in pod:
+```sh
+/prometheus/config/config-files $ pwd prometheus.yml
+/prometheus/config/config-files
+```
+
+However something seems odd with the symlinks:
+```sh
+/prometheus/config $ ls -lah
+total 12K
+drwxrwxrwx    3 root     root        4.0K Jul 21 20:16 .
+drwxrwxrwx   17 root     root        4.0K Jul 21 20:16 ..
+drwxr-xr-x    3 root     root        4.0K Jul 21 20:16 ..2026_07_21_20_16_17.846450547
+lrwxrwxrwx    1 root     root          31 Jul 21 20:16 ..data -> ..2026_07_21_20_16_17.846450547
+lrwxrwxrwx    1 root     root          19 Jul 21 20:16 config-files -> ..data/config-files
+```
+
 
 [1] https://github.com/prometheus/prometheus/tree/release-3.13/tsdb
 
@@ -84,3 +105,5 @@ Prometheus statefulset w/o setting storageclass in volumeClaimTemplates seems to
 [4] https://github.com/prometheus/prometheus/blob/73ff57ce2b8161059ac7fe5188f03f1c3d22b29a/cmd/prometheus/main.go#L485
 
 [5] https://github.com/kubernetes-sigs/kind/blob/cda67ef8588f6bfdac5358233f2471cb2149ecaf/pkg/cluster/internal/create/actions/installstorage/storage.go#L77
+
+[6] https://github.com/prometheus/prometheus/blob/main/documentation/examples/prometheus.yml
