@@ -78,6 +78,8 @@ Prometheus statefulset w/o setting storageclass in volumeClaimTemplates seems to
 
 `config-files/prometheus.yml` is taken from [6]. First create ConfigMap, then mount the read-only file.
 
+Note: `prometheus.yml` has to be defined in the ConfigMap and it can not be referenced from another dir.
+
 Checking mounted file in pod:
 ```sh
 /prometheus/config/config-files $ pwd prometheus.yml
@@ -95,6 +97,36 @@ lrwxrwxrwx    1 root     root          31 Jul 21 20:16 ..data -> ..2026_07_21_20
 lrwxrwxrwx    1 root     root          19 Jul 21 20:16 config-files -> ..data/config-files
 ```
 
+The image sets ENTRYPOINT:
+```sh
+ENTRYPOINT ["/bin/prometheus"]
+```
+
+and the following CMD:
+```sh
+CMD ["--config.file=/etc/prometheus/prometheus.yml" "--storage.tsdb.path=/prometheus"]
+```
+
+FYI differences between `ENTRYPOINT`, `CMD` and `RUN` in Docker [7], related topics in K8S [8].
+
+We shall alter `command` and `args` to reflect the mounted `prometheus.yml` in case the image changes upstream.
+
+Seems to work now as expected:
+```sh
+/etc/prometheus $ realpath prometheus.yml
+/etc/prometheus/..2026_07_22_20_03_37.823969328/prometheus.yml
+/etc/prometheus $ head prometheus.yml
+# source: https://github.com/prometheus/prometheus/blob/main/documentation/examples/prometheus.yml
+# my global config
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+```
 
 [1] https://github.com/prometheus/prometheus/tree/release-3.13/tsdb
 
@@ -107,3 +139,7 @@ lrwxrwxrwx    1 root     root          19 Jul 21 20:16 config-files -> ..data/co
 [5] https://github.com/kubernetes-sigs/kind/blob/cda67ef8588f6bfdac5358233f2471cb2149ecaf/pkg/cluster/internal/create/actions/installstorage/storage.go#L77
 
 [6] https://github.com/prometheus/prometheus/blob/main/documentation/examples/prometheus.yml
+
+[7] https://www.docker.com/blog/docker-best-practices-choosing-between-run-cmd-and-entrypoint/
+
+[8] https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/

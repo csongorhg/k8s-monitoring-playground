@@ -18,9 +18,13 @@ spec:
       containers:
         - image: prom/prometheus:v3.13.1
           name: prometheus
+          command: ["/bin/prometheus"]
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
           volumeMounts:
             - name: config
-              mountPath: "/prometheus/config"
+              mountPath: "/etc/prometheus/"
               readOnly: true
             - name: prometheus-storage
               mountPath: "/prometheus"
@@ -30,7 +34,7 @@ spec:
             name: prometheus-config
             items:
               - key: "prometheus.yml"
-                path: "config-files/prometheus.yml"
+                path: "prometheus.yml"
   volumeClaimTemplates:
     - metadata:
         name: prometheus-storage
