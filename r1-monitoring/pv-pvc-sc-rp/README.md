@@ -90,6 +90,15 @@ drwxr-xr-x    2 nobody   nobody      4.0K Aug  3 20:03 chunks_head
 drwxr-xr-x    2 nobody   nobody      4.0K Aug  3 20:03 wal
 ```
 
+## Access modes (RWO, ROX, RWX)
+
+  - RWO: ReadWriteOnce - the volume can be mounted as read-write by a single node
+  - ROX: ReadOnlyMany - the volume can be mounted read-only by many nodes
+  - RWX: ReadWriteMany - the volume can be mounted as read-write by many nodes
+  - RWOP: ReadWriteOncePod - same as RWO, but the volume can be mounted by a single pod
+
+Local volume RWO, because the volume is local to the node, and hence the volume can be only mounted by a single node. [6]
+
 [1] https://www.youtube.com/watch?v=0swOh5C3OVM
 
 [2] https://www.youtube.com/watch?v=FAnQTgr04mU
@@ -99,3 +108,5 @@ drwxr-xr-x    2 nobody   nobody      4.0K Aug  3 20:03 wal
 [4] https://github.com/prometheus/prometheus/issues/5976#issuecomment-1420961554
 
 [5] https://hub.docker.com/layers/prom/prometheus/v3.13.1/images/sha256-bd2dcadfb0d1096e2a4c21817ac7af918e2f19ff628e4bf25fd67a924c13dd80
+
+[6] https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
