@@ -16,6 +16,15 @@ spec:
         app: prometheus
       name: prometheus
     spec:
+      # Mitigate err="open /prometheus/queries.active: permission denied" issue via initContainer
+      # See https://github.com/prometheus/prometheus/issues/5976#issuecomment-1420961554
+      initContainers:
+        - name: init-chmod-data
+          image: busybox:1.38.0
+          command: ["chmod", "-R", "o+rw", "/prometheus"]
+          volumeMounts:
+            - name: prometheus-storage
+              mountPath: /prometheus
       containers:
         - image: prom/prometheus:v3.13.1
           name: prometheus

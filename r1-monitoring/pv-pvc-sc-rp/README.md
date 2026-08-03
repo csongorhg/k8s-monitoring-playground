@@ -68,6 +68,34 @@ NAME            CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM       
 prometheus-pv   1Gi        RWO            Retain           Bound    monitoring/prometheus-pvc                  <unset>                          85m
 ```
 
+## Mitigate permission issue in prometheus
+
+Mitigate err="open /prometheus/queries.active: permission denied" issue via initContainer [4].
+
+The image defines `USER: nobody` [5] to run the container.
+
+```sh
+/ $ ls -lah | grep prometheus
+drwxr-xrwx    4 root     root        4.0K Aug  3 20:04 prometheus
+/ $ id
+uid=65534(nobody) gid=65534(nobody) groups=65534(nobody)
+/ $ ls -lah prometheus/
+total 92K
+drwxr-xrwx    4 root     root        4.0K Aug  3 20:04 .
+drwxr-xr-x    1 root     root        4.0K Aug  3 20:03 ..
+drwxr-xr-x    2 nobody   nobody      4.0K Aug  3 20:03 chunks_head
+-rw-------    1 nobody   nobody    204.0K Aug  3 20:04 core
+-rw-r--r--    1 nobody   nobody         0 Aug  3 20:03 lock
+-rw-r--r--    1 nobody   nobody     19.5K Aug  3 20:03 queries.active
+drwxr-xr-x    2 nobody   nobody      4.0K Aug  3 20:03 wal
+```
+
 [1] https://www.youtube.com/watch?v=0swOh5C3OVM
+
 [2] https://www.youtube.com/watch?v=FAnQTgr04mU
+
 [3] https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates
+
+[4] https://github.com/prometheus/prometheus/issues/5976#issuecomment-1420961554
+
+[5] https://hub.docker.com/layers/prom/prometheus/v3.13.1/images/sha256-bd2dcadfb0d1096e2a4c21817ac7af918e2f19ff628e4bf25fd67a924c13dd80

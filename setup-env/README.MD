@@ -30,3 +30,15 @@ Patch netskope on kind nodes:
 ```sh
 ./patch-netskope.sh /path/to/netskope-cert.crt kind-control-plane kind-worker kind-worker2
 ```
+
+Disable proxydetox:
+
+```sh
+launchctl bootout gui/$(id -u)/cc.colorto.proxydetox
+```
+
+Enable proxydetox:
+
+```sh
+launchctl bootstrap gui/$(id -u) /Library/LaunchAgents/cc.colorto.proxydetox.plist
+```

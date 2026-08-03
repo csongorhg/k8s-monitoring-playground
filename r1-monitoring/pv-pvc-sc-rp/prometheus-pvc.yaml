@@ -11,7 +11,7 @@ spec:
     requests:
       storage: 1Gi
     limits:
-      stroge: 1Gi
+      storage: 1Gi
   selector:
     matchLabels:
       type: hostPath
