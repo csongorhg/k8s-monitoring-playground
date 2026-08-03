@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-pv-sc-delete
+  namespace: monitoring
+  labels:
+    type: hostPath
+spec:
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    # Warning  VolumeFailedDelete  66s    persistentvolume-controller  host_path deleter only supports /tmp/.+ but received provided /mnt/data
+    # path: /mnt/data
+    path: /tmp/data
+    type: DirectoryOrCreate
+  capacity:
+    storage: 1Gi
+  storageClassName: "sc-delete"
+  # See: supported hostPath cases: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaim-policy
+  persistentVolumeReclaimPolicy: Delete
+  # persistentVolumeReclaimPolicy: Recycle

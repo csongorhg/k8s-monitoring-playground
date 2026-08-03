@@ -1,4 +1,4 @@
-## Understand SC, PV, PVC and binding
+# Understand SC, PV, PVC and binding
 
 Some notes from [1] and [2]:
 
@@ -99,6 +99,28 @@ drwxr-xr-x    2 nobody   nobody      4.0K Aug  3 20:03 wal
 
 Local volume RWO, because the volume is local to the node, and hence the volume can be only mounted by a single node. [6]
 
+## Storage class
+
+Local volumes do not support dynamic provisioning in Kubernetes 1.36; however a StorageClass should still be created to delay volume binding until a Pod is actually scheduled to the appropriate node. This is specified by the WaitForFirstConsumer volume binding mode. Delaying volume binding allows the scheduler to consider all of a Pod's scheduling constraints when choosing an appropriate PersistentVolume for a PersistentVolumeClaim. [7]
+
+Note: both the pv and the pvc needs to reference the same StorageClass.
+
+Also `persistentVolumeReclaimPolicy: Delete` needs to be set in the PV.
+
+When setting Delete reclaim policy, I get:
+
+```sh
+Warning  VolumeFailedDelete  12s   persistentvolume-controller  host_path deleter only supports /tmp/.+ but received provided /mnt/data
+```
+
+This is because I use `pv.spec.hostPath` in the PV. Thus `persistentVolumeReclaimPolicy` needs to be set to `Recycle`? [8]
+
+```sh
+Normal   VolumeRecycled      96s   persistentvolume-controller  Volume recycled
+```
+
+I suppose `hostPath` only supports mounts to `/tmp` and when that is set, then after deleting the STS and the PVC, the PV gets also deleted.
+
 [1] https://www.youtube.com/watch?v=0swOh5C3OVM
 
 [2] https://www.youtube.com/watch?v=FAnQTgr04mU
@@ -110,3 +132,7 @@ Local volume RWO, because the volume is local to the node, and hence the volume 
 [5] https://hub.docker.com/layers/prom/prometheus/v3.13.1/images/sha256-bd2dcadfb0d1096e2a4c21817ac7af918e2f19ff628e4bf25fd67a924c13dd80
 
 [6] https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+
+[7] https://kubernetes.io/docs/concepts/storage/storage-classes/#local
+
+[8] https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaim-policy
