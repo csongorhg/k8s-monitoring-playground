@@ -1,0 +1,28 @@
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+default_stages:
+  - pre-commit
+  - pre-push
+
+repos:
+  - repo: local
+    hooks:
+      - id: kubeconform
+        name: kubeconform
+        entry: kubeconform -summary
+        language: system
+        files: \.(yaml|yml)$
+        # exclude `playground/*`, `setup-env/*`, `.pre-commit-config.yaml`
+        # and `.markdownlint-cli2.yaml`
+        exclude: (^|/)(playground|setup-env)(/|$)|(^|/)\.pre-commit-config\.yaml$|(^|/)\.markdownlint-cli2\.yaml$
+
+      - id: markdownlint
+        name: markdownlint
+        entry: markdownlint-cli2
+        # exclude `kubernetes-tasks.md`
+        args:
+          - "**/*.{md,MD}"
+          - "#kubernetes-tasks.md"
+        language: system
+        pass_filenames: false
