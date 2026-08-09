@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: prometheus
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - image: prom/prometheus:v3.13.1
+          name: prometheus
+          ports:
+            # Stick to image default
+            # EXPOSE map[9090/tcp:{}]
+            - containerPort: 9090
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            # Stick to image default
+            # VOLUME [/prometheus]
+            # CMD ["--storage.tsdb.path=/prometheus"]
+            - name: prometheus-storage
+              mountPath: /prometheus
+            # Stick to image default
+            # CMD ["--config.file=/etc/prometheus/prometheus.yml"]
+            - name: prometheus-config-file
+              mountPath: "/etc/prometheus/"
+              readOnly: true
+          # Stick to image default
+          # keep default ENTRYPOINT ["/bin/prometheus"], thus only specify CMD
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--web.enable-lifecycle"
+      volumes:
+        - name: prometheus-config-file
+          configMap:
+            name: prometheus-configmap
+            items:
+              - key: "prometheus.yml"
+                path: "prometheus.yml"
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheus-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi
