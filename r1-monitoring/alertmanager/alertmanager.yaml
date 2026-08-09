@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: alertmanager
+  name: alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+        - image: prom/alertmanager:v0.33.1
+          name: alertmanager
+          ports:
+            # Stick to image default
+            # EXPOSE map[9093/tcp:{}]
+            - containerPort: 9093
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            # Stick to image default
+            # VOLUME [/alertmanager]
+            # CMD ["--storage.path=/alertmanager"]
+            - name: alertmanager-storage
+              mountPath: /alertmanager
+            # Stick to image default
+            # CMD ["--config.file=/etc/alertmanager/alertmanager.yml"]
+            - name: alertmanager-config-file
+              mountPath: "/etc/alertmanager/"
+              readOnly: true
+      volumes:
+        - name: alertmanager-config-file
+          secret:
+            secretName: alertmanager-secret
+  volumeClaimTemplates:
+    - metadata:
+        name: alertmanager-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi
