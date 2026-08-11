@@ -11,3 +11,7 @@
 `pre-commit install --install-hooks`
 
 See `setup-env/` for Kind setup and required dependencies.
+
+## Setup kappa (kubectl-apply-all)
+
+alias kappa="kappa.sh"
