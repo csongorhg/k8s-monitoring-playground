@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:13.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secret
+                  key: admin-pass
+          volumeMounts:
+            - name: grafana-config
+              mountPath: /etc/grafana/
+            - name: grafana-dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards/
+            - name: grafana-node-exporter-dashboard
+              mountPath: /var/lib/grafana/dashboards/
+            - name: grafana-datasource-prometheus
+              mountPath: /etc/grafana/provisioning/datasources/
+      volumes:
+        - name: grafana-config
+          configMap:
+            name: grafana-configmap-config
+            items:
+              - key: "grafana.ini"
+                path: "grafana.ini"
+        - name: grafana-dashboard-provider
+          configMap:
+            name: grafana-configmap-config
+            items:
+              - key: "dashboard-provider.yaml"
+                path: "dashboard-provider.yaml"
+        - name: grafana-datasource-prometheus
+          configMap:
+            name: grafana-configmap-config
+            items:
+              - key: "datasource-prometheus.yaml"
+                path: "datasource-prometheus.yaml"
+        - name: grafana-node-exporter-dashboard
+          configMap:
+            name: grafana-configmap-node-exporter-dashboard
+            items:
+              - key: "node-exporter-full-rev45.json"
+                path: "node-exporter-full-rev45.json"
