@@ -13,7 +13,8 @@ data:
       alertmanagers:
         - static_configs:
             - targets:
-              # - alertmanager:9093
+              # See https://github.com/grafana/grafana/issues/46434
+              - host.docker.internal:9093 # alertmanager
 
     # Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
     rule_files:
@@ -25,15 +26,19 @@ data:
     scrape_configs:
       # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
       - job_name: "prometheus"
-
         # metrics_path defaults to '/metrics'
         # scheme defaults to 'http'.
-
         static_configs:
-          - targets: ["localhost:9090"]
+          - targets:
+            - localhost:9090
+            # See https://github.com/grafana/grafana/issues/46434
+            - host.docker.internal:8080 # kube-state-metrics - metrics
+            - host.docker.internal:8081 # kube-state-metrics - telemetry
+            - host.docker.internal:9100 # node-exporter
+            - host.docker.internal:9898 # podinfo
             # The label name is added as a label `label_name=<label_value>` to any timeseries scraped from this config.
-            labels:
-              app: "prometheus"
+            # labels:
+            #   app: "prometheus"
         scrape_native_histograms: true
 kind: ConfigMap
 metadata:
