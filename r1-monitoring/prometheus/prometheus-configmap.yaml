@@ -55,6 +55,9 @@ data:
           - source_labels: [__meta_kubernetes_endpoints_name]
             regex: 'kube-state-metrics-service'
             action: keep
+          - source_labels: [__meta_kubernetes_pod_container_port_name]
+            regex: metrics
+            action: keep
       - job_name: 'podinfo'
         kubernetes_sd_configs:
           - role: endpoints
