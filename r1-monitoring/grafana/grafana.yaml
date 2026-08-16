@@ -31,7 +31,7 @@ spec:
               mountPath: /etc/grafana/
             - name: grafana-dashboard-provider
               mountPath: /etc/grafana/provisioning/dashboards/
-            - name: grafana-node-exporter-dashboard
+            - name: grafana-dashboards
               mountPath: /var/lib/grafana/dashboards/
             - name: grafana-datasource-prometheus
               mountPath: /etc/grafana/provisioning/datasources/
@@ -54,9 +54,11 @@ spec:
             items:
               - key: "datasource-prometheus.yaml"
                 path: "datasource-prometheus.yaml"
-        - name: grafana-node-exporter-dashboard
+        - name: grafana-dashboards
           configMap:
-            name: grafana-configmap-node-exporter-dashboard
+            name: grafana-configmap-dashboards
             items:
               - key: "node-exporter-full-rev45.json"
                 path: "node-exporter-full-rev45.json"
+              - key: "custom-dashboard.json"
+                path: "custom-dashboard.json"
