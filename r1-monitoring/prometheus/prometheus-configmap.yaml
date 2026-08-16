@@ -24,13 +24,6 @@ data:
     # A scrape configuration containing exactly one endpoint to scrape:
     # Here it's Prometheus itself.
     scrape_configs:
-      - job_name: 'node-exporter'
-        kubernetes_sd_configs:
-          - role: endpoints
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_endpoints_name]
-            regex: 'node-exporter-service'
-            action: keep
       # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
       # - job_name: "prometheus"
         # metrics_path defaults to '/metrics'
@@ -48,6 +41,27 @@ data:
             # # labels:
             # #   app: "prometheus"
         # scrape_native_histograms: true
+      - job_name: 'node-exporter'
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_endpoints_name]
+            regex: 'node-exporter-service'
+            action: keep
+      - job_name: 'kube-state-metrics'
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_endpoints_name]
+            regex: 'kube-state-metrics-service'
+            action: keep
+      - job_name: 'podinfo'
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_endpoints_name]
+            regex: 'podinfo-service'
+            action: keep
 kind: ConfigMap
 metadata:
   name: prometheus-configmap
