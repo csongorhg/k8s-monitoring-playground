@@ -54,6 +54,8 @@ spec:
             items:
               - key: "prometheus.yml"
                 path: "prometheus.yml"
+              - key: "alert_rules.yml"
+                path: "alert_rules.yml"
   volumeClaimTemplates:
     - metadata:
         name: prometheus-storage
