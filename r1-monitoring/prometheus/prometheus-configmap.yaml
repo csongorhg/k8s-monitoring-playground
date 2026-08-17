@@ -14,7 +14,8 @@ data:
         - static_configs:
             - targets:
               # See https://github.com/grafana/grafana/issues/46434
-              - host.docker.internal:9093 # alertmanager
+              # - host.docker.internal:9093 # alertmanager
+              - alertmanager:9093
 
     # Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
     rule_files:
