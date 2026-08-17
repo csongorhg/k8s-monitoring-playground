@@ -17,7 +17,7 @@ See `setup-env/` for Kind setup and required dependencies.
 The script applies the manifests in the current dir by prefix and `.yaml`
 file extension matching.
 
-alias kappa="kappa.sh"
+`alias kappa="kappa.sh"`
 
 ## R1 questions
 
