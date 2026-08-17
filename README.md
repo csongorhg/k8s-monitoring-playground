@@ -68,7 +68,7 @@ This pharagraph lists the DoD proofs and steps of demonstration.
 
 These steps were performed before checking against the DoDs:
 
-- Kind cluster is running as stated in `setup-env`
+- Kind cluster is running as stated in `setup-env/`
 - `monitoring` namespace is created
 - All component manifests in `r1-monitoring/` are applied
 - Port-forwarding is set up for Grafana and Prometheus like:
@@ -173,7 +173,7 @@ Definition of done:
 
   The `prometheus_target_scrape_pool_targets{scrape_job="node-exporter"}`
   metrics are present after scaling up the Prometheus StatefulSet.
-  ![Prometheus metric state was restored after scale-up](screenshots/prom_meric_after_scaleup.png)
+  ![Prometheus metric state was restored after scale-up](screenshots/prom_metric_after_scaleup.png)
 
   Grafana:
 
@@ -276,7 +276,7 @@ Definition of done:
   kubectl port-forward --namespace monitoring svc/alertmanager-service 9093:9093
   ```
 
-  ![Alertmanager UI shows the alert firing](screenshots/alertmanager_ui_alert_firing.png)
+  ![Alertmanager UI shows the alert firing](screenshots/alertmanager_alert_fires.png)
 
 <!-- markdownlint-disable-next-line MD013 -->
 - [x] The transition from static_configs to kubernetes_sd_configs is complete, including RBAC; new targets appear automatically
