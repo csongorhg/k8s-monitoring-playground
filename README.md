@@ -1,6 +1,6 @@
 # k8s-monitoring-playground
 
-## Prerequisites
+## Developer requirements
 
 - `pre-commit`
 - `kubeconform`
@@ -21,18 +21,20 @@ alias kappa="kappa.sh"
 
 ## R1 questions
 
-This pharagraph takes the questions from the R1 exercise.
+This paragraph takes the questions from the R1 exercise.
 
 ### Component and workload type reasoning
 
+<!-- markdownlint-disable MD013 -->
 | Component | Workload | Reason |
 | --- | --- | --- |
 | Prometheus | StatefulSet | Store TSDB data between restarts |
 | Alertmanager | StatefulSet | Store silences between restarts |
 | Grafana | Deployment | Config is provisioned from the repo |
 | kube-state-metrics | Deployment | Stateless |
-| node-exporter | DaemonSet | For each node 1 pod required, stateless |
+| node-exporter | DaemonSet | One pod is required for each eligible node; it is stateless |
 | podinfo | Deployment | Stateless |
+<!-- markdownlint-enable MD013 -->
 
 ### ConfigMap and Secret
 
@@ -44,7 +46,7 @@ What is the difference between volume and env mount?
 
 ### Storage reclaim policies and volume access modes
 
-Which policy and when to use in production and why?
+Which policy should be used in production, when, and why?
 
 Retain
 
@@ -62,9 +64,9 @@ RWOP
 
 ## R1 Definition of Done
 
-This pharagraph lists the DoD proofs and steps of demonstration.
+This paragraph lists the DoD evidence and demonstration steps.
 
-### Pre-requisites
+### Prerequisites
 
 These steps were performed before checking against the DoDs:
 
@@ -149,10 +151,10 @@ Definition of done:
 - [x] Data persists after deleting the Prometheus pod (PVC + StatefulSet purpose); no state is lost after deleting the Grafana pod (Deployment + provisioning purpose)
 
   Prometheus:
-  
+
   ```sh
   kubectl scale sts/prometheus -n monitoring --replicas=0
-  # Wait to demonstrate that we don't store scraped metrics till
+  # Wait to demonstrate that scraped metrics are unavailable until
   # the prometheus pod is scaled up again. (scrape_interval: 15s)
   kubectl scale sts/prometheus -n monitoring --replicas=1
   kubectl port-forward --namespace monitoring svc/prometheus-service 9090:9090
@@ -204,8 +206,8 @@ Definition of done:
   kind-worker2         Ready    <none>          13d   v1.36.1
   ```
 
-  No node-exporter pod got scheduled on the control-plane, because it is
-  tainted.
+  No node-exporter pod was scheduled on the control plane because it has a
+  `NoSchedule` taint and the DaemonSet does not define a matching toleration.
 
   ```sh
   kubectl describe node kind-control-plane | grep Taints
@@ -235,13 +237,15 @@ Definition of done:
 <!-- markdownlint-disable-next-line MD013 -->
 - [x] prometheus.yml is mounted as a ConfigMap volume; alertmanager.yml is mounted as a Secret volume; the Grafana admin password is provided as a Secret environment variable; the datasource and dashboard come from ConfigMaps, and the node dashboard works
 
-  This was demonstrated in the previous steps, where the Prometheus Statefulset
+  This was demonstrated in the previous steps, where the Prometheus StatefulSet
   and Grafana Deployment after scaling up had the same config and dashboards.
   The config files, password and dashboards were consumed as stated by the DoD.
 
 - [x] kube_* metrics can be queried through kube-state-metrics
 
-  In Prometheus 108 kube_* metrics are present.
+  At the time of this check, Prometheus exposed 108 distinct `kube_*` metric
+  names. This number can change with the Kubernetes resources and collectors
+  enabled in kube-state-metrics.
 
   ```sh
   curl -sG http://localhost:9090/api/v1/query \
@@ -250,28 +254,28 @@ Definition of done:
      108
   ```
 
-  Note, that depending on the scraped metrics, it requires list, watch on
-  K8S resources. Since there was no specification on which resources to scrape,
-  I configured only a set of resources. This is why there are errors emitted by
-  the kube-state-metrics pod like:
+  The kube-state-metrics ServiceAccount requires `list` and `watch` permissions
+  for the Kubernetes resources it scrapes. The current ClusterRole grants only
+  a subset of those permissions, so the kube-state-metrics pod reports errors
+  for resources without the corresponding RBAC permissions, such as:
 
   ```text
-  Failed to watch" err="failed to list *v1.PodDisruptionBudget: poddisruptionbudgets.policy is forbidden: User \"system:serviceaccount:monitoring:kube-state-metrics-sa\" cannot list resource 
+  Failed to watch" err="failed to list *v1.PodDisruptionBudget: poddisruptionbudgets.policy is forbidden: User \"system:serviceaccount:monitoring:kube-state-metrics-sa\" cannot list resource
   \"poddisruptionbudgets\" in API group \"policy\" at the cluster scope
   ```
 
 <!-- markdownlint-disable-next-line MD013 -->
 - [x] podinfo is scraped as an application target, with a custom PromQL panel for its custom metrics
 
-  See previoulsy proof of scraping podinfo and persisting dashboards between
+  See the previous evidence of scraping podinfo and persisting dashboards between
   restarts.
-  
+
   ![podinfo metrics shown on a custom panel](screenshots/podinfo_promql_panel.png)
 
 - [x] One alert rule reaches the firing state in the Alertmanager UI
 
   ```sh
-  # trigger the alert 
+  # Trigger the alert
   kubectl delete daemonset/node-exporter -n monitoring
   kubectl port-forward --namespace monitoring svc/alertmanager-service 9093:9093
   ```
@@ -292,7 +296,7 @@ Definition of done:
   curl -s http://localhost:9090/api/v1/targets \
   | jq '[.data.activeTargets[] | select(.labels.job == "podinfo")] | length'
   3
-  ´´´
+  ```
 
 - [x] prometheus.yml can be successfully reloaded manually after a ConfigMap change
 
@@ -307,13 +311,13 @@ Definition of done:
     scrape_interval: 15s
 
   # Change the scrape interval to 30s
-  kubectl edit configmap prometheus-config -n monitoring
+  kubectl edit configmap prometheus-configmap -n monitoring
 
   # Reload the config
   curl -X POST http://localhost:9090/-/reload
 
   # Check the new scrape interval is applied
-    curl -s http://localhost:9090/api/v1/status/config \
+  curl -s http://localhost:9090/api/v1/status/config \
   | jq -r '.data.yaml' \
   | grep -A1 '^global:'
   global:
