@@ -165,9 +165,11 @@ Definition of done:
   ```sh
   kubectl get pod -n monitoring | grep prometheus
   prometheus-0                          1/1     Running   0          15m
+
   # Check the age of the PVC
   kubectl get pvc | grep prometheus
   prometheus-storage-prometheus-0       Bound    pvc-e3970d2e-fcce-4843-8bbc-2c4f1090b4fd   1Gi        RWO            standard       <unset>                 6d9h
+
   # Check the existing PVC got bound to the new pod
   kubectl describe pvc prometheus-storage-prometheus-0 | grep "Used By"
   Used By:       prometheus-0
@@ -290,8 +292,10 @@ Definition of done:
   curl -s http://localhost:9090/api/v1/targets \
   | jq '[.data.activeTargets[] | select(.labels.job == "podinfo")] | length'
   1
+
   # Scale podinfo deployment to 3 replicas
   kubectl scale deployment/podinfo --replicas=3 -n monitoring
+
   # After scaling, the targets are automatically discovered and scraped by Prometheus
   curl -s http://localhost:9090/api/v1/targets \
   | jq '[.data.activeTargets[] | select(.labels.job == "podinfo")] | length'
