@@ -38,37 +38,44 @@ This paragraph takes the questions from the R1 exercise.
 
 ### ConfigMap and Secret
 
-What is the difference between ConfigMap and Secret?
+**What is the difference between ConfigMap and Secret?**
 
 ConfigMap: non-sensitive configuration
-Secret: sensitive data (password, token, private keys...), secrets are stored
-Base64-encoded by default
 
-When to use which?
+Secret: sensitive data (passwords, tokens, private keys, etc.). Secrets are
+stored Base64-encoded by default.
+
+**When to use which?**
+
 Use environment variables for simple values, use volume mounts for files,
 structured configuration.
 
-What is the difference between volume and env mount?
-Environment variables are set at container startup, whilst mounted files can be
-updated by Kubernetes. But the application still needs to be reload the file.
+**What is the difference between volume and env mount?**
+
+Environment variables are set at container startup, while mounted files can be
+updated by Kubernetes. However, the application still needs to reload the file.
 
 ### Storage reclaim policies and volume access modes
 
-Which policy should be used in production, when, and why?
+**Which policy should be used in production, when, and why?**
 
-Retain: keep the PV after the PVC is deleted. Use for data, that needs to be
-persisted between restarts. Such as database or Prometheus storage.
+Retain: keep the PV after the PVC is deleted. Use for data that needs to be
+persisted between restarts, such as a database or Prometheus storage.
 
-Delete: delete the PV when the PVC is deleted. Use for temporary data, cache.
+Delete: delete the PV when the PVC is deleted. Use for temporary data and
+caches.
 
 Recycle: deprecated
 
 RWO: Read-write by one node.
+
 ROX: Read-only by many nodes.
+
 RWX: Read-write by many nodes.
+
 RWOP: Read-write by one pod.
 
-Local volume why RWO?
+**Local volume why RWO?**
 
 Because the storage belongs to one node and if a pod were to be rescheduled
 to another node, it would not be able to access the data.
@@ -84,7 +91,7 @@ These steps were performed before checking against the DoDs:
 - Kind cluster is running as stated in `setup-env/`
 - `monitoring` namespace is created
 - All component manifests in `r1-monitoring/` are applied, except for
-  `r1-monitroing/pv-pvc-sc-rp-demonstration/`
+  `r1-monitoring/pv-pvc-sc-rp-demonstration/`
 - Port-forwarding is set up for Grafana and Prometheus like:
 
 ```sh
@@ -172,7 +179,7 @@ Definition of done:
   kubectl port-forward --namespace monitoring svc/prometheus-service 9090:9090
   ```
 
-  The new pod got attached to the existing PVC:
+  The new pod was attached to the existing PVC:
 
   ```sh
   kubectl get pod -n monitoring | grep prometheus
@@ -244,14 +251,17 @@ Definition of done:
 
 <!-- markdownlint-disable-next-line MD013 -->
 - [x] A manually created PV + PVC is bound without a StorageClass (Bound), demonstrating understanding of access modes
+
+  See together with below item.
+
 <!-- markdownlint-disable-next-line MD013 -->
 - [x] A custom StorageClass uses reclaimPolicy: Retain; after deleting the PVC, the PV is Released and the data remains; the difference compared with Delete is documented
 
   **Retain** case:
 
   Create a PV and PVC manually without a StorageClass. Verify that the PVC
-  reaches Bound. Access mode shall be RWO, since `hostPath` is referened in the
-  PV.
+  reaches `Bound`. The access mode is `RWO` because the PV uses `hostPath`
+  storage.
 
   ```sh
   cd r1-monitoring/pv-pvc-sc-rp-demonstration/
@@ -262,7 +272,7 @@ Definition of done:
   NAME          STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
   example-pvc   Bound    example-pv   1Gi        RWO                           <unset>                 7m30s
  
-  kubectl get pv -n monitoring
+  kubectl get pv
   NAME         CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
   example-pv   1Gi        RWO            Retain           Bound    monitoring/example-pvc                  <unset>                          12m
   ```
@@ -286,11 +296,11 @@ Definition of done:
             claimName: example-pvc
   ```
 
-  After applying the Statefulset, we can see that the PVC got attached to
+  After applying the StatefulSet, we can see that the PVC was mounted by the
   pod.
 
   ```sh
-  kubectl describe pvc example-pvc | grep Used
+  kubectl describe pvc example-pvc -n monitoring | grep "Used By"
   Used By:       example-sts-0
   ```
 
@@ -313,11 +323,11 @@ Definition of done:
   kubectl delete pvc example-pvc -n monitoring
 
   # Note the PV is in Released state
-  k get pv -n monitoring
+  kubectl get pv
   NAME         CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM                    STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
   example-pv   1Gi        RWO            Retain           Released   monitoring/example-pvc                  <unset>                          2m46s
 
-  k delete pv example-pv -n monitoring
+  kubectl delete pv example-pv
   ```
 
   The data is still present on the worker-node.
@@ -346,7 +356,7 @@ Definition of done:
   Apply the required manifests.
 
   ```sh
-  # references standard StorageClass, that sets Delete ReclaimPolicy
+  # Reference the standard StorageClass that sets the Delete reclaim policy.
   kubectl apply -f example-pvc-standard-sc.yaml
   # Note this also created the PV
   # apply the same StatefulSet as before, but reference the PVC with standard StorageClass
@@ -384,8 +394,8 @@ Definition of done:
   ```
 
   **Summary**: The difference between Retain and Delete is that Retain keeps
-  the PV after the PVC is deleted. Also in case of Retain, if the PV is
-  deleted, the data is still present on the worker-node.
+  the PV after the PVC is deleted. Also in case of Retain and hostPath, if the
+  PV is deleted, the data is still present on the worker-node.
 
 <!-- markdownlint-disable-next-line MD013 -->
 - [x] prometheus.yml is mounted as a ConfigMap volume; alertmanager.yml is mounted as a Secret volume; the Grafana admin password is provided as a Secret environment variable; the datasource and dashboard come from ConfigMaps, and the node dashboard works
@@ -409,8 +419,9 @@ Definition of done:
 
   The kube-state-metrics ServiceAccount requires `list` and `watch` permissions
   for the Kubernetes resources it scrapes. The current ClusterRole grants only
-  a subset of those permissions, so the kube-state-metrics pod reports errors
-  for resources without the corresponding RBAC permissions, such as:
+  a subset of those permissions because no specific resource requirements were
+  stated, so the kube-state-metrics pod reports errors for resources without the
+  corresponding RBAC permissions, such as:
 
   ```text
   Failed to watch" err="failed to list *v1.PodDisruptionBudget: poddisruptionbudgets.policy is forbidden: User \"system:serviceaccount:monitoring:kube-state-metrics-sa\" cannot list resource
