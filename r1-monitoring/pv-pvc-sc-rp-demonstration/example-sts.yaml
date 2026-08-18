@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: example-sts
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: example
+  serviceName: "example"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+        - name: busybox
+          image: busybox:latest
+          command: ["sh", "-c", "sleep infinity"]
+          volumeMounts:
+            - name: example-pv
+              mountPath: /mnt/data
+      volumes:
+        - name: example-pv
+          persistentVolumeClaim:
+            claimName: example-pvc

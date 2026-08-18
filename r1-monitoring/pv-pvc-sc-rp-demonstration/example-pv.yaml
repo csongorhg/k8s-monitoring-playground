@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: example-pv
+  namespace: monitoring
+  labels:
+    type: hostPath
+spec:
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data
+    type: DirectoryOrCreate
+  capacity:
+    storage: 1Gi

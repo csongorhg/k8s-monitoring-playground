@@ -40,27 +40,38 @@ This paragraph takes the questions from the R1 exercise.
 
 What is the difference between ConfigMap and Secret?
 
+ConfigMap: non-sensitive configuration
+Secret: sensitive data (password, token, private keys...), secrets are stored
+Base64-encoded by default
+
 When to use which?
+Use environment variables for simple values, use volume mounts for files,
+structured configuration.
 
 What is the difference between volume and env mount?
+Environment variables are set at container startup, whilst mounted files can be
+updated by Kubernetes. But the application still needs to be reload the file.
 
 ### Storage reclaim policies and volume access modes
 
 Which policy should be used in production, when, and why?
 
-Retain
+Retain: keep the PV after the PVC is deleted. Use for data, that needs to be
+persisted between restarts. Such as database or Prometheus storage.
 
-Delete
+Delete: delete the PV when the PVC is deleted. Use for temporary data, cache.
 
-Recycle
+Recycle: deprecated
 
-RWO
+RWO: Read-write by one node.
+ROX: Read-only by many nodes.
+RWX: Read-write by many nodes.
+RWOP: Read-write by one pod.
 
-ROX
+Local volume why RWO?
 
-RWX
-
-RWOP
+Because the storage belongs to one node and if a pod were to be rescheduled
+to another node, it would not be able to access the data.
 
 ## R1 Definition of Done
 
@@ -72,7 +83,8 @@ These steps were performed before checking against the DoDs:
 
 - Kind cluster is running as stated in `setup-env/`
 - `monitoring` namespace is created
-- All component manifests in `r1-monitoring/` are applied
+- All component manifests in `r1-monitoring/` are applied, except for
+  `r1-monitroing/pv-pvc-sc-rp-demonstration/`
 - Port-forwarding is set up for Grafana and Prometheus like:
 
 ```sh
@@ -231,10 +243,149 @@ Definition of done:
   ```
 
 <!-- markdownlint-disable-next-line MD013 -->
-- [ ] A manually created PV + PVC is bound without a StorageClass (Bound), demonstrating understanding of access modes
-
+- [x] A manually created PV + PVC is bound without a StorageClass (Bound), demonstrating understanding of access modes
 <!-- markdownlint-disable-next-line MD013 -->
-- [ ] A custom StorageClass uses reclaimPolicy: Retain; after deleting the PVC, the PV is Released and the data remains; the difference compared with Delete is documented
+- [x] A custom StorageClass uses reclaimPolicy: Retain; after deleting the PVC, the PV is Released and the data remains; the difference compared with Delete is documented
+
+  **Retain** case:
+
+  Create a PV and PVC manually without a StorageClass. Verify that the PVC
+  reaches Bound. Access mode shall be RWO, since `hostPath` is referened in the
+  PV.
+
+  ```sh
+  cd r1-monitoring/pv-pvc-sc-rp-demonstration/
+  kubectl apply -f example-pv.yaml
+  kubectl apply -f example-pvc.yaml
+
+  kubectl get pvc -n monitoring
+  NAME          STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+  example-pvc   Bound    example-pv   1Gi        RWO                           <unset>                 7m30s
+ 
+  kubectl get pv -n monitoring
+  NAME         CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+  example-pv   1Gi        RWO            Retain           Bound    monitoring/example-pvc                  <unset>                          12m
+  ```
+
+  Apply the example StatefulSet.
+
+  ```sh
+  kubectl apply -f example-sts.yaml
+  ```
+
+  Note the below part in the StatefulSet is responsible for mounting the
+  manually created PVC.
+
+  ```text
+          volumeMounts:
+            - name: example-pv
+              mountPath: /mnt/data
+      volumes:
+        - name: example-pv
+          persistentVolumeClaim:
+            claimName: example-pvc
+  ```
+
+  After applying the Statefulset, we can see that the PVC got attached to
+  pod.
+
+  ```sh
+  kubectl describe pvc example-pvc | grep Used
+  Used By:       example-sts-0
+  ```
+
+  Create a file in the pod.
+
+  ```sh
+  /mnt/data # echo "persist" > file.txt
+
+  /mnt/data # ls -lah
+  total 12K
+  drwxr-xrwx    2 root     root        4.0K Aug 18 17:32 .
+  drwxr-xr-x    3 root     root        4.0K Aug 18 17:32 ..
+  -rw-r--r--    1 root     root           8 Aug 18 17:32 file.txt
+  ```
+
+  Delete the pod and the PVC and then the PV.
+
+  ```sh
+  kubectl delete pod example-sts-0 -n monitoring
+  kubectl delete pvc example-pvc -n monitoring
+
+  # Note the PV is in Released state
+  k get pv -n monitoring
+  NAME         CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM                    STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+  example-pv   1Gi        RWO            Retain           Released   monitoring/example-pvc                  <unset>                          2m46s
+
+  k delete pv example-pv -n monitoring
+  ```
+
+  The data is still present on the worker-node.
+
+  ```sh
+  docker exec -it kind-worker cat /mnt/data/file.txt
+  persist
+  ```
+
+  Re-apply again the PV and PVC.
+
+  ```sh
+  kubectl apply -f example-pv.yaml
+  kubectl apply -f example-pvc.yaml
+  ```
+
+  The pod got scheduled to the same node (RWO) and the data is still present.
+
+  ```sh
+  /mnt/data # cat file.txt
+  persist
+  ```
+
+  **Delete** case:
+
+  Apply the required manifests.
+
+  ```sh
+  # references standard StorageClass, that sets Delete ReclaimPolicy
+  kubectl apply -f example-pvc-standard-sc.yaml
+  # Note this also created the PV
+  # apply the same StatefulSet as before, but reference the PVC with standard StorageClass
+  kubectl apply -f example-sts-delete-rc.yaml
+
+  kubectl get pvc,pv
+  NAME                                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+  persistentvolumeclaim/example-pvc-standard-sc   Bound    pvc-13b6bcbc-445a-42ce-beda-deca39aaae9a   1Gi        RWO            standard       <unset>                 74s
+
+  NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+  persistentvolume/pvc-13b6bcbc-445a-42ce-beda-deca39aaae9a   1Gi        RWO            Delete           Bound    monitoring/example-pvc-standard-sc   standard       <unset>                          71s
+  ```
+
+  Save some data in the pod.
+
+  ```sh
+  /mnt/data # echo "this will not persist" > file2.txt
+  ```
+
+  Delete the PVC and the pod.
+
+  ```sh
+  kubectl delete pvc example-pvc-standard-sc -n monitoring
+  kubectl delete pod example-sts-delete-rc-0 -n monitoring
+  # the PV got deleted as well
+  ```
+
+  The data is not present on the worker-node.
+
+  ```sh
+  docker exec -it kind-worker ls -lah /mnt/data/
+  total 8.0K
+  drwxr-xrwx 2 root root 4.0K Aug 18 18:45 .
+  drwxr-xr-x 1 root root 4.0K Aug  3 19:20 ..
+  ```
+
+  **Summary**: The difference between Retain and Delete is that Retain keeps
+  the PV after the PVC is deleted. Also in case of Retain, if the PV is
+  deleted, the data is still present on the worker-node.
 
 <!-- markdownlint-disable-next-line MD013 -->
 - [x] prometheus.yml is mounted as a ConfigMap volume; alertmanager.yml is mounted as a Secret volume; the Grafana admin password is provided as a Secret environment variable; the datasource and dashboard come from ConfigMaps, and the node dashboard works
