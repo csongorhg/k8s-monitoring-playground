@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: prometheus
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+      name: prometheus
+    spec:
+      # Mitigate err="open /prometheus/queries.active: permission denied" issue via initContainer
+      # See https://github.com/prometheus/prometheus/issues/5976#issuecomment-1420961554
+      initContainers:
+        - name: init-chmod-data
+          image: busybox:1.38.0
+          command: ["chmod", "-R", "o+rw", "/prometheus"]
+          volumeMounts:
+            - name: prometheus-storage
+              mountPath: /prometheus
+      containers:
+        - image: prom/prometheus:v3.13.1
+          name: prometheus
+          ports:
+            - containerPort: 9090
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: prometheus-storage
+              mountPath: /prometheus
+      volumes:
+        - name: prometheus-storage
+          persistentVolumeClaim:
+            claimName: prometheus-pvc
+  # volumeClaimTemplates approach will not work to bind the manually
+  # created PVC, becausse it always creates a new PVC
+  # volumeClaimTemplates:
+  #   - metadata:
+  #       name: prometheus-storage
+  #     spec:
+  #       accessModes: ["ReadWriteOnce"]
+  #       resources:
+  #         requests:
+  #           storage: 1Gi
+  #       # Adding selector to ensure the pod bounds to the manually
+  #       # created PV via the manually created PVC
+  #       # Edit: this is not working due to
+  #       # failed to provision volume with StorageClass "standard": claim.Spec.Selector is not supported
+  #       # selector:
+  #       #   matchLabels:
+  #       #     type: hostPath
+  #       # This approach also fails with:
+  #       # Cannot bind to requested volume "prometheus-pv": storageClassName does not match
+  #       # volumeName: prometheus-pv
