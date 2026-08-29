@@ -20,9 +20,9 @@ repos:
       - id: markdownlint
         name: markdownlint
         entry: markdownlint-cli2
-        # exclude `kubernetes-tasks.md`
+        # exclude `kubernetes-tasks-r[0-9].md`
         args:
           - "**/*.{md,MD}"
-          - "#kubernetes-tasks.md"
+          - "#kubernetes-tasks-r[0-9].md"
         language: system
         pass_filenames: false
