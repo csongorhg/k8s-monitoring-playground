@@ -12,10 +12,21 @@ repos:
         name: kubeconform
         entry: kubeconform -summary
         language: system
-        files: \.yaml$
-        # exclude `playground/*`, `setup-env/*`, `.pre-commit-config.yaml`
-        # and `.markdownlint-cli2.yaml`
-        exclude: (^|/)(playground|setup-env)(/|$)|(^|/)\.pre-commit-config\.yaml$|(^|/)\.markdownlint-cli2\.yaml$
+        # exclude validating helm charts
+        files: ^r1-monitoring/.*\.yaml$
+
+      # validate the rendered Helm chart manifests with kubeconform
+      - id: kubeconform-helm-template
+        name: kubeconform-helm-template
+        entry: bash
+        args:
+          - -c
+          - >-
+            helm template validate ./r2-chart/monitoring |
+            kubeconform -summary -
+        language: system
+        files: ^r2-chart/monitoring/
+        pass_filenames: false
 
       - id: markdownlint
         name: markdownlint
@@ -25,4 +36,11 @@ repos:
           - "**/*.{md,MD}"
           - "#kubernetes-tasks-r[0-9].md"
         language: system
+        pass_filenames: false
+
+      - id: helmlint
+        name: helmlint
+        entry: helm lint ./r2-chart/monitoring
+        language: system
+        files: ^r2-chart/
         pass_filenames: false

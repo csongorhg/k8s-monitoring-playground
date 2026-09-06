@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-configmap-dashboards
+  namespace: monitoring
+data:
+  custom-dashboard.json: |
+{{ .Files.Get "grafana-dashboard/custom-dashboard.json" | indent 4 }}
+  node-exporter-full-rev45.json: |
+{{ .Files.Get "grafana-dashboard/node-exporter-full-rev45.json" | indent 4 }}
