@@ -5,6 +5,7 @@
 - `pre-commit`
 - `kubeconform`
 - `markdownlint-cli2`
+- `helm`
 
 ## Setup
 

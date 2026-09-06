@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      containers:
+        - name: node-exporter
+          image: >-
+            {{ printf "%s:%s"
+              .Values.nodeExporter.image.repository
+              .Values.nodeExporter.image.tag
+            }}
+          args:
+            - --path.rootfs=/host
+          ports:
+            - containerPort: 9100
+              name: metrics
+          resources:
+            limits:
+              cpu: {{ .Values.nodeExporter.resources.limits.cpu | quote }}
+              memory: {{ .Values.nodeExporter.resources.limits.memory | quote }}
+            requests:
+              cpu: {{ .Values.nodeExporter.resources.requests.cpu | quote }}
+              memory: {{ .Values.nodeExporter.resources.requests.memory | quote }}
+          volumeMounts:
+            - name: root
+              mountPath: /host
+              readOnly: true
+      volumes:
+        - name: root
+          hostPath:
+            path: /
+            type: Directory

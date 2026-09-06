@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podinfo
+  namespace: monitoring
+  labels:
+    app: podinfo
+spec:
+  replicas: {{ .Values.podinfo.replicaCount }}
+  selector:
+    matchLabels:
+      app: podinfo
+  template:
+    metadata:
+      labels:
+        app: podinfo
+    spec:
+      containers:
+        - name: podinfo
+          image: >-
+            {{ printf "%s:%s"
+              .Values.podinfo.image.repository
+              .Values.podinfo.image.tag
+            }}
+          ports:
+            - containerPort: 9898
+          resources:
+            requests:
+              cpu: {{ .Values.podinfo.resources.requests.cpu | quote }}
+              memory: {{ .Values.podinfo.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.podinfo.resources.limits.cpu | quote }}
+              memory: {{ .Values.podinfo.resources.limits.memory | quote }}

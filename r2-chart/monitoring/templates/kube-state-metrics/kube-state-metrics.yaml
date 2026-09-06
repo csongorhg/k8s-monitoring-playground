@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+  labels:
+    app: kube-state-metrics
+spec:
+  replicas: {{ .Values.kubeStateMetrics.replicaCount }}
+  selector:
+    matchLabels:
+      app: kube-state-metrics
+  template:
+    metadata:
+      labels:
+        app: kube-state-metrics
+    spec:
+      serviceAccountName: kube-state-metrics-sa
+      containers:
+        - name: kube-state-metrics
+          image: >-
+            {{ printf "%s:%s"
+              .Values.kubeStateMetrics.image.repository
+              .Values.kubeStateMetrics.image.tag
+            }}
+          ports:
+            - name: metrics
+              containerPort: 8080
+            - name: telemetry
+              containerPort: 8081
+          resources:
+            requests:
+              cpu: {{ .Values.kubeStateMetrics.resources.requests.cpu | quote }}
+              memory: {{ .Values.kubeStateMetrics.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.kubeStateMetrics.resources.limits.cpu | quote }}
+              memory: {{ .Values.kubeStateMetrics.resources.limits.memory | quote }}

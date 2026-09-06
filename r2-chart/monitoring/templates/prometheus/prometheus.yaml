@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: prometheus
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: {{ .Values.prometheus.replicaCount }}
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: prometheus-sa
+      containers:
+        - image: >-
+            {{ printf "%s:%s"
+              .Values.prometheus.image.repository
+              .Values.prometheus.image.tag
+            }}
+          name: prometheus
+          ports:
+            # Stick to image default
+            # EXPOSE map[9090/tcp:{}]
+            - containerPort: 9090
+          resources:
+            requests:
+              cpu: {{ .Values.prometheus.resources.requests.cpu | quote }}
+              memory: {{ .Values.prometheus.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.prometheus.resources.limits.cpu | quote }}
+              memory: {{ .Values.prometheus.resources.limits.memory | quote }}
+          volumeMounts:
+            # Stick to image default
+            # VOLUME [/prometheus]
+            # CMD ["--storage.tsdb.path=/prometheus"]
+            - name: prometheus-storage
+              mountPath: /prometheus
+            # Stick to image default
+            # CMD ["--config.file=/etc/prometheus/prometheus.yml"]
+            - name: prometheus-config-file
+              mountPath: "/etc/prometheus/"
+              readOnly: true
+          # Stick to image default
+          # keep default ENTRYPOINT ["/bin/prometheus"], thus only specify CMD
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--storage.tsdb.retention.time={{ .Values.prometheus.tsdbRetention }}"
+            - "--web.enable-lifecycle"
+      volumes:
+        - name: prometheus-config-file
+          configMap:
+            name: prometheus-configmap
+            items:
+              - key: "prometheus.yml"
+                path: "prometheus.yml"
+              - key: "alert_rules.yml"
+                path: "alert_rules.yml"
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheus-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.prometheus.storageClassName | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.prometheus.pvcSize | quote }}
