@@ -1,7 +1,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: prometheus-cr
+  name: {{ printf "%s-prometheus-cr" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
 rules:
   - apiGroups:
       - ""

@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
     app: alertmanager
-  name: alertmanager
+  name: {{ printf "%s-alertmanager" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
 spec:
   replicas: {{ .Values.alertmanager.replicaCount }}
@@ -13,6 +14,7 @@ spec:
   template:
     metadata:
       labels:
+        {{- include "monitoring.labels" . | nindent 8 }}
         app: alertmanager
     spec:
       containers:
@@ -47,10 +49,12 @@ spec:
       volumes:
         - name: alertmanager-config-file
           secret:
-            secretName: alertmanager-secret
+            secretName: {{ printf "%s-alertmanager-secret" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   volumeClaimTemplates:
     - metadata:
         name: alertmanager-storage
+        labels:
+          {{- include "monitoring.labels" . | nindent 10 }}
       spec:
         accessModes: ["ReadWriteOnce"]
         storageClassName: {{ .Values.alertmanager.storageClassName | quote }}

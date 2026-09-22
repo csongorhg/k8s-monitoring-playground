@@ -1,5 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: prometheus-sa
+  name: {{ printf "%s-prometheus-sa" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
+  labels:
+    {{- include "monitoring.labels" . | nindent 4 }}

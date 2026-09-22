@@ -26,7 +26,7 @@ data:
             - targets:
               # See https://github.com/grafana/grafana/issues/46434
               # - host.docker.internal:9093 # alertmanager
-              - alertmanager-service:9093
+              - {{ printf "%s-alertmanager-service" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}:9093
 
     # Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
     rule_files:
@@ -59,14 +59,14 @@ data:
           - role: endpoints
         relabel_configs:
           - source_labels: [__meta_kubernetes_endpoints_name]
-            regex: 'node-exporter-service'
+            regex: '{{ printf "%s-node-exporter-service" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}'
             action: keep
       - job_name: 'kube-state-metrics'
         kubernetes_sd_configs:
           - role: endpoints
         relabel_configs:
           - source_labels: [__meta_kubernetes_endpoints_name]
-            regex: 'kube-state-metrics-service'
+            regex: '{{ printf "%s-kube-state-metrics-service" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}'
             action: keep
           - source_labels: [__meta_kubernetes_pod_container_port_name]
             regex: metrics
@@ -76,9 +76,11 @@ data:
           - role: endpoints
         relabel_configs:
           - source_labels: [__meta_kubernetes_endpoints_name]
-            regex: 'podinfo-service'
+            regex: '{{ printf "%s-podinfo-service" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}'
             action: keep
 kind: ConfigMap
 metadata:
-  name: prometheus-configmap
+  name: {{ printf "%s-prometheus-configmap" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
+  labels:
+    {{- include "monitoring.labels" . | nindent 4 }}

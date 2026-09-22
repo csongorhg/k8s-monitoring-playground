@@ -1,12 +1,14 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kube-state-metrics
+  name: {{ printf "%s-kube-state-metrics-crb" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kube-state-metrics-cr
+  name: {{ printf "%s-kube-state-metrics-cr" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
 subjects:
   - kind: ServiceAccount
-    name: kube-state-metrics-sa
+    name: {{ printf "%s-kube-state-metrics-sa" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
     namespace: monitoring

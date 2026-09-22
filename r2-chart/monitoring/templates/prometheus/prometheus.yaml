@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
     app: prometheus
-  name: prometheus
+  name: {{ printf "%s-prometheus" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
 spec:
   replicas: {{ .Values.prometheus.replicaCount }}
@@ -13,9 +14,10 @@ spec:
   template:
     metadata:
       labels:
+        {{- include "monitoring.labels" . | nindent 8 }}
         app: prometheus
     spec:
-      serviceAccountName: prometheus-sa
+      serviceAccountName: {{ printf "%s-prometheus-sa" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
       containers:
         - image: >-
             {{ printf "%s:%s"
@@ -55,7 +57,7 @@ spec:
       volumes:
         - name: prometheus-config-file
           configMap:
-            name: prometheus-configmap
+            name: {{ printf "%s-prometheus-configmap" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
             items:
               - key: "prometheus.yml"
                 path: "prometheus.yml"
@@ -64,6 +66,8 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: prometheus-storage
+        labels:
+          {{- include "monitoring.labels" . | nindent 10 }}
       spec:
         accessModes: ["ReadWriteOnce"]
         storageClassName: {{ .Values.prometheus.storageClassName | quote }}

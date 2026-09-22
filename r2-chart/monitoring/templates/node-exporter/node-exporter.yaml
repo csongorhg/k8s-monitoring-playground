@@ -1,9 +1,10 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: node-exporter
+  name: {{ printf "%s-node-exporter" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
   labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
     app: node-exporter
 spec:
   selector:
@@ -12,6 +13,7 @@ spec:
   template:
     metadata:
       labels:
+        {{- include "monitoring.labels" . | nindent 8 }}
         app: node-exporter
     spec:
       containers:

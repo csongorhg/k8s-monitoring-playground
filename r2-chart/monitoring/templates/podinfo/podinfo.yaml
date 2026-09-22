@@ -1,9 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: podinfo
+  name: {{ printf "%s-podinfo" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
   labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
     app: podinfo
 spec:
   replicas: {{ .Values.podinfo.replicaCount }}
@@ -13,6 +14,7 @@ spec:
   template:
     metadata:
       labels:
+        {{- include "monitoring.labels" . | nindent 8 }}
         app: podinfo
     spec:
       containers:

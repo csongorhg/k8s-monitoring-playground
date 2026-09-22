@@ -1,8 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: kube-state-metrics-service
+  name: {{ printf "%s-kube-state-metrics-service" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
+  labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
 spec:
   selector:
     app: kube-state-metrics

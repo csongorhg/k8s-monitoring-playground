@@ -1,5 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kube-state-metrics-sa
+  name: {{ printf "%s-kube-state-metrics-sa" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
+  labels:
+    {{- include "monitoring.labels" . | nindent 4 }}

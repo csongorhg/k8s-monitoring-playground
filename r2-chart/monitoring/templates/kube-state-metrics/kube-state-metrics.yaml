@@ -1,9 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kube-state-metrics
+  name: {{ printf "%s-kube-state-metrics" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
   labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
     app: kube-state-metrics
 spec:
   replicas: {{ .Values.kubeStateMetrics.replicaCount }}
@@ -13,9 +14,10 @@ spec:
   template:
     metadata:
       labels:
+        {{- include "monitoring.labels" . | nindent 8 }}
         app: kube-state-metrics
     spec:
-      serviceAccountName: kube-state-metrics-sa
+      serviceAccountName: {{ printf "%s-kube-state-metrics-sa" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
       containers:
         - name: kube-state-metrics
           image: >-

@@ -1,12 +1,14 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: prometheus-crb
+  name: {{ printf "%s-prometheus-crb" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: prometheus-cr
+  name: {{ printf "%s-prometheus-cr" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
 subjects:
 - kind: ServiceAccount
-  name: prometheus-sa
+  name: {{ printf "%s-prometheus-sa" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring

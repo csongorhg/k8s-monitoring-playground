@@ -1,9 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana
+  name: {{ printf "%s-grafana" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: monitoring
   labels:
+    {{- include "monitoring.labels" . | nindent 4 }}
     app: grafana
 spec:
   replicas: {{ .Values.grafana.replicaCount }}
@@ -13,6 +14,7 @@ spec:
   template:
     metadata:
       labels:
+        {{- include "monitoring.labels" . | nindent 8 }}
         app: grafana
     spec:
       containers:
@@ -28,7 +30,7 @@ spec:
             - name: GF_SECURITY_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: grafana-secret
+                  name: {{ printf "%s-grafana-secret" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
                   key: admin-pass
             # This was added since r1, as setting the admin user is a
             # new requirement in r2
@@ -53,25 +55,25 @@ spec:
       volumes:
         - name: grafana-config
           configMap:
-            name: grafana-configmap-config
+            name: {{ printf "%s-grafana-configmap-config" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
             items:
               - key: "grafana.ini"
                 path: "grafana.ini"
         - name: grafana-dashboard-provider
           configMap:
-            name: grafana-configmap-config
+            name: {{ printf "%s-grafana-configmap-config" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
             items:
               - key: "dashboard-provider.yaml"
                 path: "dashboard-provider.yaml"
         - name: grafana-datasource-prometheus
           configMap:
-            name: grafana-configmap-config
+            name: {{ printf "%s-grafana-configmap-config" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
             items:
               - key: "datasource-prometheus.yaml"
                 path: "datasource-prometheus.yaml"
         - name: grafana-dashboards
           configMap:
-            name: grafana-configmap-dashboards
+            name: {{ printf "%s-grafana-configmap-dashboards" (include "monitoring.fullname" .) | trunc 63 | trimSuffix "-" }}
             items:
               - key: "node-exporter-full-rev45.json"
                 path: "node-exporter-full-rev45.json"
