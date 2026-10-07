@@ -13,6 +13,8 @@ spec:
       app: prometheus
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/prometheus/prometheus-configmap.yaml") . | sha256sum }}
       labels:
         {{- include "monitoring.labels" . | nindent 8 }}
         app: prometheus
