@@ -1,0 +1,34 @@
+# Monitoring Helm Chart
+
+This chart installs a monitoring stack including:
+
+- Prometheus
+- Alertmanager
+- Grafana (when an admin password is provided)
+- kube-state-metrics
+- node-exporter
+- podinfo
+
+## Grafana
+
+{{ if .Values.grafana.adminPassword }}
+Grafana was installed with the configured admin password.
+{{ else }}
+Grafana was skipped because `grafana.adminPassword` was not set.
+To enable it, provide an admin password and run the install/upgrade
+command again:
+
+```sh
+read -r -s GRAFANA_ADMIN_PASSWORD
+helm upgrade --install monitoring . \
+  --namespace monitoring \
+  --create-namespace \
+  --set grafana.adminPassword="$GRAFANA_ADMIN_PASSWORD"
+```
+{{ end }}
+
+## Uninstall
+
+```sh
+helm uninstall monitoring
+```

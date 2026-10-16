@@ -4,20 +4,22 @@ This chart installs a monitoring stack including:
 
 - Prometheus
 - Alertmanager
-- Grafana
+- Grafana (when an admin password is provided)
 - kube-state-metrics
 - node-exporter
 - podinfo
 
 ## Install
 
-Make sure to set the Grafana admin password before installing the chart:
+The chart can be installed without a Grafana admin password; Grafana resources are
+skipped until `grafana.adminPassword` is provided. To install or enable Grafana,
+set the password:
 
 ```sh
 read -r -s GRAFANA_ADMIN_PASSWORD
 ```
 
-and then install the chart like:
+Then install or upgrade the chart:
 
 ```sh
 helm upgrade --install monitoring . \

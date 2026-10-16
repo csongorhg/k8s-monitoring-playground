@@ -1,3 +1,4 @@
+{{- if .Values.grafana.adminPassword }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -79,3 +80,4 @@ spec:
                 path: "node-exporter-full-rev45.json"
               - key: "custom-dashboard.json"
                 path: "custom-dashboard.json"
+{{ end }}

@@ -1,3 +1,4 @@
+{{- if .Values.grafana.adminPassword }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -2395,3 +2396,4 @@ data:
     # is 0, which disables rate limiting. Set a positive value to enable it; without
     # webhook_trusted_ip_header it keys on the real TCP peer.
     ;webhook_rate_limit_rps = 0
+{{ end }}
