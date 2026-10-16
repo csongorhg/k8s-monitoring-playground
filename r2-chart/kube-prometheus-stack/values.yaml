@@ -1,0 +1,23 @@
+# Custom values for kube-prometheus-stack.
+alertmanager:
+  alertmanagerSpec:
+    retention: 2h
+
+grafana:
+  adminPassword: somepass123
+
+prometheus:
+  prometheusSpec:
+    retention: 1d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gluster
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+          selector: {}
+
+  serviceMonitor:
+    retention: 12h
